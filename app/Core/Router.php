@@ -17,17 +17,21 @@ class Router
         return $this;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function resolve($method, $uri)
     {
-        foreach($this->routes as $route){
-            if ($route['method'] === strtoupper($method) && $route['uri'] === $uri){
-                $class = new $route['controller'][0];
-                $action = $route['controller'][1];
-
-                return call_user_func([$class, $action]);
+        foreach ($this->routes[$method] as $route => $action) {
+            // Convert route pattern to regex (e.g., /user/{id} → /user/(\w+))
+            $pattern = preg_replace('/\{(\w+)\}/', '(\w+)', $route);
+            if (preg_match("#^$pattern$#", $uri, $matches)) {
+                // Extract parameters (e.g., id from /user/123)
+                $params = array_slice($matches, 1);
+                return $this->callAction($action, $params);
             }
         }
-        die();
+        throw new \Exception("Route not found: $uri");
     }
 
     public function get(string $uri, array $controller): static
