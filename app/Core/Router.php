@@ -2,7 +2,6 @@
 
 namespace App\Core;
 
-
 use Exception;
 use ReflectionMethod;
 
@@ -29,9 +28,16 @@ class Router
     {
         foreach ($this->routes as $route) {
             $pattern = $route['uri'];
-            $regex = preg_replace('/\{(\w+)\}/', '(\w+)', $pattern);
-            if (preg_match("#^$regex$#", $uri, $matches) && $route['method'] === strtoupper($method)){
-                $params = $matches[1];
+            preg_match_all('/\{(\w+)\}/', $pattern, $paramNames);
+            $paramNames = $paramNames[1];
+
+            $regex = "#^" . preg_replace('/\{(\w+)\}/', '(\w+)', $pattern) . "$#";
+
+            if (preg_match($regex, $uri, $matches) && $route['method'] === strtoupper($method)) {
+                array_shift($matches);
+
+                $params = array_combine($paramNames, $matches);
+
                 $this->callAction(route: $route, params: $params);
             }
         }
@@ -71,11 +77,9 @@ class Router
             $name = $parameter->getName();
             if (isset($params[$name])) {
                 $args[] = $params[$name];
-            } else {
-                throw new Exception("Argument $name has no default value");
             }
         }
 
-        $reflection->invokeArgs($controller, $args);
+        $reflection->invokeArgs(new $controller, $args);
     }
 }
