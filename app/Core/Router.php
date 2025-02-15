@@ -31,7 +31,7 @@ class Router
             preg_match_all('/\{(\w+)\}/', $pattern, $paramNames);
             $paramNames = $paramNames[1];
 
-            $regex = "#^" . preg_replace('/\{(\w+)\}/', '(\w+)', $pattern) . "$#";
+            $regex = "#^" . preg_replace('/\{(\w+)\}/', '([^/]+)', $pattern) . "$#";
 
             if (preg_match($regex, $uri, $matches) && $route['method'] === strtoupper($method)) {
                 array_shift($matches);
